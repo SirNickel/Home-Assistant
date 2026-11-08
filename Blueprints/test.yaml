@@ -1,11 +1,9 @@
 blueprint:
   name: Philips Hue Tap - Multi Action Cycle
-  description: >
-    Pro Taste bis zu 3 Aktionen.\n
-    Zustand wird in einem Input Text gespeichert.\n
-    Nach Timeout beginnt die Taste wieder bei Aktion 1.\n
-    Version 1.0.9
-
+  description: "Pro Taste bis zu 3 Aktionen.
+    Zustand wird in einem Input Text gespeichert.
+    Nach Timeout beginnt die Taste wieder bei Aktion 1.
+    Version 1.0.10"
   domain: automation
 
   input:
@@ -323,7 +321,7 @@ action:
         {% set d = dict(d) %}
         {% set d = d | combine({
           key: {
-            's': effective_step | int,
+            's': effective_step | int + 1,
             'ts': now_ts | int
           }
         }) %}
