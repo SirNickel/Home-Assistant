@@ -4,7 +4,7 @@ blueprint:
     Pro Taste bis zu 3 Aktionen.\n
     Zustand wird in einem Input Text gespeichert.\n
     Nach Timeout beginnt die Taste wieder bei Aktion 1.\n
-    Version 1.0.8
+    Version 1.0.9
 
   domain: automation
 
@@ -41,8 +41,6 @@ blueprint:
     t1_section:
       name: Taste 1 Aktionen
       icon: mdi:gesture-tap-button
-      description: Aktionen für Taste 1. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
-        auf Aktion 1 zurückgesetzt.
       collapsed: true
       input:
         t1_action1:
@@ -60,8 +58,6 @@ blueprint:
     t2_section:
       name: Taste 2 Aktionen
       icon: mdi:gesture-tap-button
-      description: Aktionen für Taste 2. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
-        auf Aktion 2  zurückgesetzt.
       input:
         t2_action1:
           selector:
@@ -78,8 +74,6 @@ blueprint:
     t3_section:
       name: Taste 3 Aktionen
       icon: mdi:gesture-tap-button
-      description: Aktionen für Taste 3. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
-        auf Aktion 3 zurückgesetzt.
       input:
         t3_action1:
           selector:
@@ -96,8 +90,6 @@ blueprint:
     t4_section:
       name: Taste 4 Aktionen
       icon: mdi:gesture-tap-button
-      description: Aktionen für Taste 4. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
-        auf Aktion 4 zurückgesetzt.
       input:
         t4_action1:
           selector:
@@ -165,12 +157,13 @@ variables:
     {% else %}
       {{ raw | from_json }}
     {% endif %}
+
+  # Aktueller Schritt (vor dem Tasten Drücken) und Zeitpunkt des letzten Tastendrucks
   current_step: "{{ data[key]['s'] | int(0) }}"
-  last_ts: "{{ data[key]['ts'] | int(0) }}"
 
   # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
   effective_step: >
-    {% if (now_ts - last_ts > timeout_seconds) %}
+    {% if (now_ts - data[key]['ts'] | int(0) > timeout_seconds) %}
       0
     {% else %}
       {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
@@ -182,13 +175,13 @@ variables:
     {% endif %}
 
   # Nächster Schritt
-  next_step: >
-    {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-    {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
-      0
-    {% else %}
-      {{ current_step + 1 }}
-    {% endif %}
+  # next_step: >
+  #   {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
+  #   {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
+  #     0
+  #   {% else %}
+  #     {{ current_step + 1 }}
+  #   {% endif %}
 
 action:
   #
@@ -330,7 +323,7 @@ action:
         {% set d = dict(d) %}
         {% set d = d | combine({
           key: {
-            's': next_state | int,
+            's': effective_step | int,
             'ts': now_ts | int
           }
         }) %}
