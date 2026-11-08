@@ -157,19 +157,6 @@ variables:
       {% endif %}
     {% endif %}
 
-  # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
-  current_step: >
-    {% if (now_ts - last_ts > timeout_seconds) %}
-      0
-    {% else %}
-      {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-      {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
-        0
-      {% else %}
-        {{ current_step }}
-      {% endif %}
-    {% endif %}
-
   # Nächster Schritt
   next_step: >
     {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
