@@ -4,7 +4,7 @@ blueprint:
     Pro Taste bis zu 3 Aktionen.
     Zustand wird in einem Input Text gespeichert.
     Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.5
+    Version 1.0.6
 
   domain: automation
 
@@ -100,6 +100,35 @@ variables:
   timeout_seconds: !input timeout
   now_ts: "{{ now().timestamp() | int }}"
 
+  # Speichert die Inputs
+  t1_a1: !input t1_action1
+  t1_a2: !input t1_action2
+  t1_a3: !input t1_action3
+  t2_a1: !input t2_action1
+  t2_a2: !input t2_action2
+  t2_a3: !input t2_action3
+  t3_a1: !input t3_action1
+  t3_a2: !input t3_action2
+  t3_a3: !input t3_action3
+  t4_a1: !input t4_action1
+  t4_a2: !input t4_action2
+  t4_a3: !input t4_action3
+
+  # Erstellt eine Map, die TRUE zurückgibt, wenn die Aktion existiert UND befüllt ist
+  act_exists:
+    t1_a1: "{{ t1_a1 is defined and t1_a1 | length > 0 }}"
+    t1_a2: "{{ t1_a2 is defined and t1_a2 | length > 0 }}"
+    t1_a3: "{{ t1_a3 is defined and t1_a3 | length > 0 }}"
+    t2_a1: "{{ t2_a1 is defined and t2_a1 | length > 0 }}"
+    t2_a2: "{{ t2_a2 is defined and t2_a2 | length > 0 }}"
+    t2_a3: "{{ t2_a3 is defined and t2_a3 | length > 0 }}"
+    t3_a1: "{{ t3_a1 is defined and t3_a1 | length > 0 }}"
+    t3_a2: "{{ t3_a2 is defined and t3_a2 | length > 0 }}"
+    t3_a3: "{{ t3_a3 is defined and t3_a3 | length > 0 }}"
+    t4_a1: "{{ t4_a1 is defined and t4_a1 | length > 0 }}"
+    t4_a2: "{{ t4_a2 is defined and t4_a2 | length > 0 }}"
+    t4_a3: "{{ t4_a3 is defined and t4_a3 | length > 0 }}"
+
   data: >
     {% set raw = states(state_helper_entity) %}
     {% if raw in ['unknown','unavailable',''] %}
@@ -111,35 +140,14 @@ variables:
     {{ data[key]['s'] | int(0) }}
   last_ts: >
     {{ data[key]['ts'] | int(0) }}
-  # effective_step: >
-  #   {% if now_ts - last_ts > timeout_seconds %}
-  #     0
-  #   {% else %}
-  #     {{ current_step }}
-  #   {% endif %}
 
-  # Verzeichnis aller Inputs zur Validierung (ob gesetzt oder nicht)
-  act_map:
-    t1_a1: !input t1_action1
-    t1_a2: !input t1_action2
-    t1_a3: !input t1_action3
-    t2_a1: !input t2_action1
-    t2_a2: !input t2_action2
-    t2_a3: !input t2_action3
-    t3_a1: !input t3_action1
-    t3_a2: !input t3_action2
-    t3_a3: !input t3_action3
-    t4_a1: !input t4_action1
-    t4_a2: !input t4_action2
-    t4_a3: !input t4_action3
-
-  # Ermittelt den auszuführenden Schritt unter Berücksichtigung von Timeout und leeren Folge-Aktionen
+  # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
   effective_step: >
     {% if (now_ts - last_ts > timeout_seconds) %}
       0
     {% else %}
       {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-      {% if act_map[next_act_key] is defined and act_map[next_act_key] | length > 0 %}
+      {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
         0
       {% else %}
         {{ current_step }}
