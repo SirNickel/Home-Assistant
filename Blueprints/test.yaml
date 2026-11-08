@@ -1,10 +1,10 @@
 blueprint:
   name: Philips Hue Tap - Multi Action Cycle
   description: >
-    Pro Taste bis zu 3 Aktionen.
-    Zustand wird in einem Input Text gespeichert.
-    Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.7
+    Pro Taste bis zu 3 Aktionen.\n
+    Zustand wird in einem Input Text gespeichert.\n
+    Nach Timeout beginnt die Taste wieder bei Aktion 1.\n
+    Version 1.0.8
 
   domain: automation
 
@@ -33,18 +33,23 @@ blueprint:
           min: 1
           max: 300
           mode: box
-
-    t1_action1:
-      selector:
-        action: {}
-    t1_action2:
-      default: []
-      selector:
-        action: {}
-    t1_action3:
-      default: []
-      selector:
-        action: {}
+    t1_section:
+      name: Taste 1 Aktionen
+      icon: mdi:gesture-tap-button
+      description: Aktionen für Taste 1. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
+        auf Aktion 1 zurückgesetzt.
+      collapsed: true
+      t1_action1:
+        selector:
+          action: {}
+      t1_action2:
+        default: []
+        selector:
+          action: {}
+      t1_action3:
+        default: []
+        selector:
+          action: {}
 
     t2_action1:
       selector:
@@ -136,10 +141,8 @@ variables:
     {% else %}
       {{ raw | from_json }}
     {% endif %}
-  current_step: >
-    {{ data[key]['s'] | int(0) }}
-  last_ts: >
-    {{ data[key]['ts'] | int(0) }}
+  current_step: "{{ data[key]['s'] | int(0) }}"
+  last_ts: "{{ data[key]['ts'] | int(0) }}"
 
   # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
   effective_step: >
@@ -154,11 +157,32 @@ variables:
       {% endif %}
     {% endif %}
 
+  # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
+  current_step: >
+    {% if (now_ts - last_ts > timeout_seconds) %}
+      0
+    {% else %}
+      {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
+      {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
+        0
+      {% else %}
+        {{ current_step }}
+      {% endif %}
+    {% endif %}
+
+  # Nächster Schritt
+  next_step: >
+    {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
+    {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
+      0
+    {% else %}
+      {{ current_step + 1 }}
+    {% endif %}
+
 action:
   #
   # Taste 1
   #
-
   - choose:
       - conditions:
           - condition: template
@@ -223,7 +247,6 @@ action:
       #
       # Taste 3
       #
-
       - conditions:
           - condition: template
             value_template: >
@@ -257,7 +280,6 @@ action:
       #
       # Taste 4
       #
-
       - conditions:
           - condition: template
             value_template: >
