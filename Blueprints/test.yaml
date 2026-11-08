@@ -9,30 +9,32 @@ blueprint:
   domain: automation
 
   input:
-    remote:
-      name: Hue Tap Switch
-      description: Select the Philips Hue Tap Switch
-      selector:
-        device:
-          integration: zha
-          manufacturer: Philips
-          model: Hue Tap
-    state_helper:
-      name: State Helper
-      description: Create an input text helper within Home Assistant to keep track
-        of the last button pressed and its automation run. This avoids mixing fast
-        presses from different buttons. **Each switch requires a unique helper!**
-      selector:
-        entity:
-          domain: input_text
-    timeout:
-      name: Timeout Sekunden
-      default: 10
-      selector:
-        number:
-          min: 1
-          max: 300
-          mode: box
+    main_section:
+      remote:
+        name: Hue Tap Switch
+        description: Select the Philips Hue Tap Switch
+        selector:
+          device:
+            integration: zha
+            manufacturer: Philips
+            model: Hue Tap
+      state_helper:
+        name: State Helper
+        description: Create an input text helper within Home Assistant to keep track
+          of the last button pressed and its automation run. This avoids mixing fast
+          presses from different buttons. **Each switch requires a unique helper!**
+        selector:
+          entity:
+            domain: input_text
+      timeout:
+        name: Timeout Sekunden
+        default: 10
+        selector:
+          number:
+            min: 1
+            max: 300
+            mode: box
+
     t1_section:
       name: Taste 1 Aktionen
       icon: mdi:gesture-tap-button
@@ -51,38 +53,53 @@ blueprint:
         selector:
           action: {}
 
-    t2_action1:
-      selector:
-        action: {}
-    t2_action2:
-      default: []
-      selector:
-        action: {}
-    t2_action3:
-      default: []
-      selector:
-        action: {}
+    t2_section:
+      name: Taste 2 Aktionen
+      icon: mdi:gesture-tap-button
+      description: Aktionen für Taste 2. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
+        auf Aktion 2  zurückgesetzt.
+      t2_action1:
+        selector:
+          action: {}
+      t2_action2:
+        default: []
+        selector:
+          action: {}
+      t2_action3:
+        default: []
+        selector:
+          action: {}
 
-    t3_action1:
-      selector:
-        action: {}
-    t3_action2:
+    t3_section:
+      name: Taste 3 Aktionen
+      icon: mdi:gesture-tap-button
+      description: Aktionen für Taste 3. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
+        auf Aktion 3 zurückgesetzt.
+      t3_action1:
+        selector:
+          action: {}
+      t3_action2:
       default: []
       selector:
         action: {}
-    t3_action3:
-      default: []
-      selector:
-        action: {}
+      t3_action3:
+        default: []
+        selector:
+          action: {}
 
-    t4_action1:
-      selector:
-        action: {}
-    t4_action2:
-      default: []
-      selector:
-        action: {}
-    t4_action3:
+    t4_section:
+      name: Taste 4 Aktionen
+      icon: mdi:gesture-tap-button
+      description: Aktionen für Taste 4. Wenn eine Aktion nicht befüllt ist, wird die Taste wieder
+        auf Aktion 4 zurückgesetzt.
+      t4_action1:
+        selector:
+          action: {}
+      t4_action2:
+        default: []
+        selector:
+          action: {}
+      t4_action3:
       default: []
       selector:
         action: {}
