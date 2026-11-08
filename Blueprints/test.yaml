@@ -111,11 +111,23 @@ variables:
     {{ data[key]['s'] | int(0) }}
   last_ts: >
     {{ data[key]['ts'] | int(0) }}
+  # effective_step: >
+  #   {% if now_ts - last_ts > timeout_seconds %}
+  #     0
+  #   {% else %}
+  #     {{ current_step }}
+  #   {% endif %}
+  # Ermittelt den auszuführenden Schritt unter Berücksichtigung von Timeout und leeren Folge-Aktionen
   effective_step: >
-    {% if now_ts - last_ts > timeout_seconds %}
+    {% if (now_ts - last_ts > timeout_seconds) %}
       0
     {% else %}
-      {{ current_step }}
+      {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
+      {% if act_map[next_act_key] == none %}
+        0
+      {% else %}
+        {{ current_step }}
+      {% endif %}
     {% endif %}
 
   # Verzeichnis aller Inputs zur Validierung (ob gesetzt oder nicht)
