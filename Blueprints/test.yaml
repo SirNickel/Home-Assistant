@@ -118,6 +118,21 @@ variables:
       {{ current_step }}
     {% endif %}
 
+  # Verzeichnis aller Inputs zur Validierung (ob gesetzt oder nicht)
+  act_map:
+    t1_a1: !input t1_action1
+    t1_a2: !input t1_action2
+    t1_a3: !input t1_action3
+    t2_a1: !input t2_action1
+    t2_a2: !input t2_action2
+    t2_a3: !input t2_action3
+    t3_a1: !input t3_action1
+    t3_a2: !input t3_action2
+    t3_a3: !input t3_action3
+    t4_a1: !input t4_action1
+    t4_a2: !input t4_action2
+    t4_a3: !input t4_action3
+
 action:
   #
   # Taste 1
