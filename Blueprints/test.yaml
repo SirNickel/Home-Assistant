@@ -184,7 +184,7 @@ variables:
       0
     {% else %}
       {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-      {% if 'next_act_key' in act_exists and act_exists[next_act_key] == true %}
+      {% if next_act_key in act_exists and act_exists[next_act_key] == true %}
         {{ current_step }}
       {% else %}
         0
