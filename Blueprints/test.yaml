@@ -4,7 +4,7 @@ blueprint:
     Pro Taste bis zu 3 Aktionen.
     Zustand wird in einem Input Text gespeichert.
     Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.6
+    Version 1.0.7
 
   domain: automation
 
@@ -195,25 +195,25 @@ action:
       #
       - conditions:
           - condition: template
-            value_template: "{{ key == 't2' and effective_step | int == 0 and t1_action1 != none }}"
+            value_template: "{{ key == 't2' and effective_step | int == 0 }}"
         sequence:
           - choose: []
             default: !input t2_action1
           - variables:
-              next_state: "{{ 1 if t1_action2 != none else 0 }}"
+              next_state: 1
 
       - conditions:
           - condition: template
-            value_template: "{{ key == 't2' and effective_step | int == 1 and act_map['t2_a2'] != none }}"
+            value_template: "{{ key == 't2' and effective_step | int == 1 }}"
         sequence:
           - choose: []
             default: !input t2_action2
           - variables:
-              next_state: "{{ 2 if act_map['t2_a3'] != none else 0 }}"
+              next_state: 2
 
       - conditions:
           - condition: template
-            value_template: "{{ key == 't2' and effective_step | int == 2 and act_map['t2_a3'] != none }}"
+            value_template: "{{ key == 't2' and effective_step | int == 2 }}"
         sequence:
           - choose: []
             default: !input t2_action3
