@@ -1,0 +1,268 @@
+blueprint:
+  name: Philips Hue Tap - Multi Action Cycle
+  description: >
+    Pro Taste bis zu 3 Aktionen.
+    Zustand wird in einem Input Text gespeichert.
+    Nach Timeout beginnt die Taste wieder bei Aktion 1.
+    Version 1.0.0
+
+  domain: automation
+
+  input:
+    remote:
+      name: Hue Tap Switch
+      description: Select the Philips Hue Tap Switch
+      selector:
+        device:
+          integration: zha
+          manufacturer: Philips
+          model: Hue Tap
+    state_helper:
+      name: State Helper
+      description: Create an input text helper within Home Assistant to keep track
+        of the last button pressed and its automation run. This avoids mixing fast
+        presses from different buttons. **Each switch requires a unique helper!**
+      selector:
+        entity:
+          domain: input_text
+    timeout:
+      name: Timeout Sekunden
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 300
+          mode: box
+
+    t1_action1:
+      selector:
+        action: {}
+    t1_action2:
+      default: []
+      selector:
+        action: {}
+    t1_action3:
+      default: []
+      selector:
+        action: {}
+
+    t2_action1:
+      selector:
+        action: {}
+    t2_action2:
+      default: []
+      selector:
+        action: {}
+    t2_action3:
+      default: []
+      selector:
+        action: {}
+
+    t3_action1:
+      selector:
+        action: {}
+    t3_action2:
+      default: []
+      selector:
+        action: {}
+    t3_action3:
+      default: []
+      selector:
+        action: {}
+
+    t4_action1:
+      selector:
+        action: {}
+    t4_action2:
+      default: []
+      selector:
+        action: {}
+    t4_action3:
+      default: []
+      selector:
+        action: {}
+
+mode: queued
+max: 20
+
+trigger:
+  - trigger: event.received
+    target:
+      device_id: !input remote
+    options:
+      event_type:
+        - press_start
+
+variables:
+  # Holt die Nummer der Taste (1-4) direkt aus dem Namen der auslösenden Entität (z. B. taste_1 -> 1)
+  key: "t{{ trigger.entity_id | regex_findall_index('_([1-4])') }}"
+  state_helper_entity: !input state_helper
+  timeout_seconds: !input timeout
+  now_ts: "{{ now().timestamp() | int }}"
+
+  data: >
+    {% set raw = states(state_helper_entity) %}
+    {% if raw in ['unknown','unavailable',''] %}
+      {{ {"t1":{"s":0,"ts":0},"t2":{"s":0,"ts":0},"t3":{"s":0,"ts":0},"t4":{"s":0,"ts":0}} }}
+    {% else %}
+      {{ raw | from_json }}
+    {% endif %}
+  current_step: >
+    {{ data[key]['s'] | int(0) }}
+  last_ts: >
+    {{ data[key]['ts'] | int(0) }}
+  effective_step: >
+    {% if now_ts - last_ts > timeout_seconds %}
+      0
+    {% else %}
+      {{ current_step }}
+    {% endif %}
+
+action:
+  #
+  # Taste 1
+  #
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't1' and effective_step | int == 0 }}
+        sequence:
+          - choose: []
+            default: !input t1_action1
+          - variables:
+              next_state: 1
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't1' and effective_step | int == 1 }}
+        sequence:
+          - choose: []
+            default: !input t1_action2
+          - variables:
+              next_state: 2
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't1' and effective_step | int == 2 }}
+        sequence:
+          - choose: []
+            default: !input t1_action3
+          - variables:
+              next_state: 0
+
+      #
+      # TASTE 2
+      #
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't2' and effective_step | int == 0 and act_map['t2_a1'] != none }}"
+        sequence:
+          - choose: []
+            default: !input t2_action1
+          - variables:
+              next_state: "{{ 1 if act_map['t2_a2'] != none else 0 }}"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't2' and effective_step | int == 1 and act_map['t2_a2'] != none }}"
+        sequence:
+          - choose: []
+            default: !input t2_action2
+          - variables:
+              next_state: "{{ 2 if act_map['t2_a3'] != none else 0 }}"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't2' and effective_step | int == 2 and act_map['t2_a3'] != none }}"
+        sequence:
+          - choose: []
+            default: !input t2_action3
+          - variables:
+              next_state: 0
+
+      #
+      # Taste 3
+      #
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't3' and effective_step | int == 0 }}
+        sequence:
+          - choose: []
+            default: !input t3_action1
+          - variables:
+              next_state: 1
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't3' and effective_step | int == 1 }}
+        sequence:
+          - choose: []
+            default: !input t3_action2
+          - variables:
+              next_state: 2
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't3' and effective_step | int == 2 }}
+        sequence:
+          - choose: []
+            default: !input t3_action3
+          - variables:
+              next_state: 0
+
+      #
+      # Taste 4
+      #
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't4' and effective_step | int == 0 }}
+        sequence:
+          - choose: []
+            default: !input t4_action1
+          - variables:
+              next_state: 1
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't4' and effective_step | int == 1 }}
+        sequence:
+          - choose: []
+            default: !input t4_action2
+          - variables:
+              next_state: 2
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't4' and effective_step | int == 2 }}
+        sequence:
+          - choose: []
+            default: !input t4_action3
+          - variables:
+              next_state: 0
+
+  - service: input_text.set_value
+    target:
+      entity_id: !input state_helper
+    data:
+      value: >
+        {% set d = data %}
+        {% set d = dict(d) %}
+        {% set d = d | combine({
+          key: {
+            's': next_state | int,
+            'ts': now_ts | int
+          }
+        }) %}
+        {{ d | to_json }}

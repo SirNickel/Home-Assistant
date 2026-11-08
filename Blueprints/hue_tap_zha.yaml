@@ -1,0 +1,175 @@
+blueprint:
+  name: ZHA Philips-Hue-Tap-Switch
+  author: Nickel
+  description: Integrate Philips Hue Tap Switch into Home Assistant to create a powerful remote control, supporting single tap and double tap.
+  domain: automation
+  input:
+    remote:
+      name: Hue Tap Switch
+      description: Select the Philips Hue Tap Switch
+      selector:
+        device:
+          integration: zha
+          manufacturer: Philips
+          model: Hue Tap
+    tap_counter:
+      name: Counter Helper
+      description: Create a counter helper within Home Assistant to monitor the number
+        of button presses on the switch, distinguishing between single and multiple
+        clicks. This helper can be used for various switches, provided that they are
+        not pressed at the same time
+      selector:
+        entity:
+          domain:
+            - counter
+          multiple: false
+    last_pressed:
+      name: Last Pressed Input Text Helper
+      description: Create an input text helper within Home Assistant to keep track
+        of the last button pressed and its automation run. This avoids mixing fast
+        presses from different buttons. **Each switch requires a unique helper!**
+      selector:
+        entity:
+          domain:
+            - input_text
+          multiple: false
+    helper_reset_delay:
+      name: Helper - Reset delay
+      description: Time before the counter is reset.
+      default: 10
+      selector:
+        number:
+          unit_of_measurement: seconds
+          min: 1
+          max: 30
+          step: 1
+          mode: slider
+    button_1_single_press:
+      name: Button 1 Single Press
+      default: []
+      selector:
+        action: {}
+    button_1_double_press:
+      name: Button 1 Double Press
+      default: []
+      selector:
+        action: {}
+    button_2_single_press:
+      name: Button 2 Single Press
+      default: []
+      selector:
+        action: {}
+    button_2_double_press:
+      name: Button 2 Double Press
+      default: []
+      selector:
+        action: {}
+    button_3_single_press:
+      name: Button 3 Single Press
+      default: []
+      selector:
+        action: {}
+    button_3_double_press:
+      name: Button 3 Double Press
+      default: []
+      selector:
+        action: {}
+    button_4_single_press:
+      name: Button 4 Single Press
+      default: []
+      selector:
+        action: {}
+    button_4_double_press:
+      name: Button 4 Double Press
+      default: []
+      selector:
+        action: {}
+mode: parallel
+max: 10
+max_exceeded: silent
+
+triggers:
+  - trigger: event.received
+    target:
+      # Hier wird die Variable aus dem Input über '!input' dynamisch eingesetzt
+      device_id: !input remote
+    options:
+      event_type:
+        - press_start
+
+action:
+  - variables:
+      input_text_var: !input last_pressed
+      counter_var: !input tap_counter
+      # Holt die Nummer der Taste (1-4) direkt aus dem Namen der auslösenden Entität (z. B. taste_1 -> 1)
+      current_button: "{{ trigger.entity_id | regex_findall_index('taste_([1-4])') }}"
+      last_button: "{{ states(input_text_var).split('|')[0] }}"
+      run_id: "{{ context.id }}"
+
+  - sequence:
+      # Falls eine ANDERE Taste als zuvor gedrückt wurde, setzen wir den Zähler sofort zurück
+      - if:
+          - condition: template
+            value_template: "{{ current_button != last_button }}"
+        then:
+          - service: counter.reset
+            target:
+              entity_id: "{{ counter_var }}"
+
+      # Aktuelle Taste im Input Text Helper speichern
+      - service: input_text.set_value
+        data:
+          value: "{{ current_button }}|{{ run_id }}"
+        target:
+          entity_id: "{{ input_text_var }}"
+
+      # Zähler hochzählen
+      - service: counter.increment
+        target:
+          entity_id: "{{ counter_var }}"
+
+      # Kurze Wartezeit für den Double-Tap-Check
+      - delay:
+          milliseconds: 1000
+
+      # Only the newest run may classify the current click sequence.
+      - condition: template
+        value_template: "{{ states(input_text_var) == current_button ~ '|' ~ run_id }}"
+
+      # Auswertung nach Ablauf der Millisekunden
+      - choose:
+          # --- DOUBLE TAP ---
+          - conditions:
+              - condition: template
+                value_template: "{{ states(counter_var) | int(0) > 1 }}"
+            sequence:
+              - service: counter.reset
+                target:
+                  entity_id: "{{ counter_var }}"
+              - choose:
+                  - conditions: "{{ current_button == '1' }}"
+                    sequence: !input button_1_double_press
+                  - conditions: "{{ current_button == '2' }}"
+                    sequence: !input button_2_double_press
+                  - conditions: "{{ current_button == '3' }}"
+                    sequence: !input button_3_double_press
+                  - conditions: "{{ current_button == '4' }}"
+                    sequence: !input button_4_double_press
+
+          # --- SINGLE TAP ---
+          - conditions:
+              - condition: template
+                value_template: "{{ states(counter_var) | int(0) == 1 }}"
+            sequence:
+              - service: counter.reset
+                target:
+                  entity_id: "{{ counter_var }}"
+              - choose:
+                  - conditions: "{{ current_button == '1' }}"
+                    sequence: !input button_1_single_press
+                  - conditions: "{{ current_button == '2' }}"
+                    sequence: !input button_2_single_press
+                  - conditions: "{{ current_button == '3' }}"
+                    sequence: !input button_3_single_press
+                  - conditions: "{{ current_button == '4' }}"
+                    sequence: !input button_4_single_press
