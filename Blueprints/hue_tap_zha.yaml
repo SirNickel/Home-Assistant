@@ -1,176 +1,312 @@
 blueprint:
-  name: ZHA Philips-Hue-Tap-Switch
-  author: Nickel
-  description: Integrate Philips Hue Tap Switch into Home Assistant to create a powerful remote control, supporting single tap and double tap.
+  name: Philips Hue Tap - Multi Action Cycle
+  author: Nicolas Kammerer
+  description: "Pro Taste bis zu 3 Aktionen.\n
+    Zustand wird in einem Input Text gespeichert.\n
+    Nach Timeout beginnt die Taste wieder bei Aktion 1.\n
+    \n
+    Version 1.0.3"
   domain: automation
-  input:
-    remote:
-      name: Hue Tap Switch
-      description: Select the Philips Hue Tap Switch
-      selector:
-        device:
-          integration: zha
-          manufacturer: Philips
-          model: Hue Tap
-    tap_counter:
-      name: Counter Helper
-      description: Create a counter helper within Home Assistant to monitor the number
-        of button presses on the switch, distinguishing between single and multiple
-        clicks. This helper can be used for various switches, provided that they are
-        not pressed at the same time
-      selector:
-        entity:
-          domain:
-            - counter
-          multiple: false
-    last_pressed:
-      name: Last Pressed Input Text Helper
-      description: Create an input text helper within Home Assistant to keep track
-        of the last button pressed and its automation run.
-        This avoids mixing fast presses from different buttons.
-        **Each switch requires a unique helper!**
-      selector:
-        entity:
-          domain:
-            - input_text
-          multiple: false
-    helper_reset_delay:
-      name: Helper - Reset delay
-      description: Time before the counter is reset.
-      default: 10
-      selector:
-        number:
-          unit_of_measurement: seconds
-          min: 1
-          max: 30
-          step: 1
-          mode: slider
-    button_1_single_press:
-      name: Button 1 Single Press
-      default: []
-      selector:
-        action: {}
-    button_1_double_press:
-      name: Button 1 Double Press
-      default: []
-      selector:
-        action: {}
-    button_2_single_press:
-      name: Button 2 Single Press
-      default: []
-      selector:
-        action: {}
-    button_2_double_press:
-      name: Button 2 Double Press
-      default: []
-      selector:
-        action: {}
-    button_3_single_press:
-      name: Button 3 Single Press
-      default: []
-      selector:
-        action: {}
-    button_3_double_press:
-      name: Button 3 Double Press
-      default: []
-      selector:
-        action: {}
-    button_4_single_press:
-      name: Button 4 Single Press
-      default: []
-      selector:
-        action: {}
-    button_4_double_press:
-      name: Button 4 Double Press
-      default: []
-      selector:
-        action: {}
-mode: parallel
-max: 10
-max_exceeded: silent
 
-triggers:
+  input:
+    main_section:
+      name: Allgemeine Einstellungen
+      icon: mdi:gear
+      collapsed: false
+      input:
+        remote:
+          name: Hue Tap Switch
+          description: Wähle den Philips Hue Tap Schalter aus.
+          selector:
+            device:
+              integration: zha
+              manufacturer: Philips
+              model: Hue Tap
+        state_helper:
+          name: State Helper
+          description: Ein input_text Helfer, um den Zustand zu speichern.
+          selector:
+            entity:
+              domain: input_text
+        timeout:
+          name: Timeout Sekunden
+          default: 10
+          selector:
+            number:
+              min: 1
+              max: 300
+              mode: box
+
+    t1_section:
+      name: Taste 1 Aktionen
+      icon: mdi:gesture-tap-button
+      collapsed: true
+      input:
+        t1_action1:
+          name: Aktion 1 (Optional)
+          default: []
+          selector:
+            action: {}
+        t1_action2:
+          name: Aktion 2 (Optional)
+          default: []
+          selector:
+            action: {}
+        t1_action3:
+          name: Aktion 3 (Optional)
+          default: []
+          selector:
+            action: {}
+
+    t2_section:
+      name: Taste 2 Aktionen
+      icon: mdi:gesture-tap-button
+      collapsed: true
+      input:
+        t2_action1:
+          name: Aktion 1 (Optional)
+          default: []
+          selector:
+            action: {}
+        t2_action2:
+          name: Aktion 2 (Optional)
+          default: []
+          selector:
+            action: {}
+        t2_action3:
+          name: Aktion 3 (Optional)
+          default: []
+          selector:
+            action: {}
+
+    t3_section:
+      name: Taste 3 Aktionen
+      icon: mdi:gesture-tap-button
+      collapsed: true
+      input:
+        t3_action1:
+          name: Aktion 1 (Optional)
+          default: []
+          selector:
+            action: {}
+        t3_action2:
+          name: Aktion 2 (Optional)
+          default: []
+          selector:
+            action: {}
+        t3_action3:
+          name: Aktion 3 (Optional)
+          default: []
+          selector:
+            action: {}
+
+    t4_section:
+      name: Taste 4 Aktionen
+      icon: mdi:gesture-tap-button
+      collapsed: true
+      input:
+        t4_action1:
+          name: Aktion 1 (Optional)
+          default: []
+          selector:
+            action: {}
+        t4_action2:
+          name: Aktion 2 (Optional)
+          default: []
+          selector:
+            action: {}
+        t4_action3:
+          name: Aktion 3 (Optional)
+          default: []
+          selector:
+            action: {}
+
+mode: queued
+max: 20
+
+trigger:
   - trigger: event.received
     target:
-      # Hier wird die Variable aus dem Input über '!input' dynamisch eingesetzt
       device_id: !input remote
     options:
       event_type:
         - press_start
 
+variables:
+  # Holt die Nummer der Taste (1-4) direkt aus dem Namen der auslösenden Entität (z. B. taste_1 -> 1)
+  key: "t{{ trigger.entity_id | regex_findall_index('_([1-4])') }}"
+  state_helper_entity: !input state_helper
+  timeout_seconds: !input timeout
+  now_ts: "{{ now().timestamp() | int }}"
+
+  # Speichert die Inputs
+  t1_a1: !input t1_action1
+  t1_a2: !input t1_action2
+  t1_a3: !input t1_action3
+  t2_a1: !input t2_action1
+  t2_a2: !input t2_action2
+  t2_a3: !input t2_action3
+  t3_a1: !input t3_action1
+  t3_a2: !input t3_action2
+  t3_a3: !input t3_action3
+  t4_a1: !input t4_action1
+  t4_a2: !input t4_action2
+  t4_a3: !input t4_action3
+
+  # Erstellt eine Map, die TRUE zurückgibt, wenn die Aktion existiert UND befüllt ist
+  act_exists:
+    t1_a1: "{{ t1_a1 is defined and t1_a1 | length > 0 }}"
+    t1_a2: "{{ t1_a2 is defined and t1_a2 | length > 0 }}"
+    t1_a3: "{{ t1_a3 is defined and t1_a3 | length > 0 }}"
+    t2_a1: "{{ t2_a1 is defined and t2_a1 | length > 0 }}"
+    t2_a2: "{{ t2_a2 is defined and t2_a2 | length > 0 }}"
+    t2_a3: "{{ t2_a3 is defined and t2_a3 | length > 0 }}"
+    t3_a1: "{{ t3_a1 is defined and t3_a1 | length > 0 }}"
+    t3_a2: "{{ t3_a2 is defined and t3_a2 | length > 0 }}"
+    t3_a3: "{{ t3_a3 is defined and t3_a3 | length > 0 }}"
+    t4_a1: "{{ t4_a1 is defined and t4_a1 | length > 0 }}"
+    t4_a2: "{{ t4_a2 is defined and t4_a2 | length > 0 }}"
+    t4_a3: "{{ t4_a3 is defined and t4_a3 | length > 0 }}"
+
+  data: >
+    {% set raw = states(state_helper_entity) %}
+    {% if raw in ['unknown','unavailable',''] %}
+      {{ {"t1":{"s":0,"ts":0},"t2":{"s":0,"ts":0},"t3":{"s":0,"ts":0},"t4":{"s":0,"ts":0}} }}
+    {% else %}
+      {{ raw | from_json }}
+    {% endif %}
+
+  # Aktueller Schritt (vor dem Tasten Drücken) und Zeitpunkt des letzten Tastendrucks
+  current_step: "{{ data[key]['s'] | int(0) }}"
+
+  # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
+  effective_step: >
+    {% if (now_ts - data[key]['ts'] | int(0) > timeout_seconds) or current_step == 3 %}
+      0
+    {% else %}
+      {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
+      {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
+        0
+      {% else %}
+        {{ current_step }}
+      {% endif %}
+    {% endif %}
+
 action:
-  - variables:
-      input_text_var: !input last_pressed
-      counter_var: !input tap_counter
-      # Holt die Nummer der Taste (1-4) direkt aus dem Namen der auslösenden Entität (z. B. taste_1 -> 1)
-      current_button: "{{ trigger.entity_id | regex_findall_index('taste_([1-4])') }}"
-      last_button: "{{ states(input_text_var).split('|')[0] }}"
-      run_id: "{{ context.id }}"
-
-  - sequence:
-      # Falls eine ANDERE Taste als zuvor gedrückt wurde, setzen wir den Zähler sofort zurück
-      - if:
+  #
+  # Taste 1
+  #
+  - choose:
+      - conditions:
           - condition: template
-            value_template: "{{ current_button != last_button }}"
-        then:
-          - service: counter.reset
-            target:
-              entity_id: "{{ counter_var }}"
+            value_template: "{{ key == 't1' and effective_step | int == 0 }}"
+        sequence:
+          - choose: []
+            default: !input t1_action1
 
-      # Aktuelle Taste im Input Text Helper speichern
-      - service: input_text.set_value
-        data:
-          value: "{{ current_button }}|{{ run_id }}"
-        target:
-          entity_id: "{{ input_text_var }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't1' and effective_step | int == 1 }}"
+        sequence:
+          - choose: []
+            default: !input t1_action2
 
-      # Zähler hochzählen
-      - service: counter.increment
-        target:
-          entity_id: "{{ counter_var }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't1' and effective_step | int == 2 }}"
+        sequence:
+          - choose: []
+            default: !input t1_action3
 
-      # Kurze Wartezeit für den Double-Tap-Check
-      - delay:
-          milliseconds: 1000
+      #
+      # TASTE 2
+      #
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't2' and effective_step | int == 0 }}"
+        sequence:
+          - choose: []
+            default: !input t2_action1
 
-      # Only the newest run may classify the current click sequence.
-      - condition: template
-        value_template: "{{ states(input_text_var) == current_button ~ '|' ~ run_id }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't2' and effective_step | int == 1 }}"
+        sequence:
+          - choose: []
+            default: !input t2_action2
 
-      # Auswertung nach Ablauf der Millisekunden
-      - choose:
-          # --- DOUBLE TAP ---
-          - conditions:
-              - condition: template
-                value_template: "{{ states(counter_var) | int(0) > 1 }}"
-            sequence:
-              - service: counter.reset
-                target:
-                  entity_id: "{{ counter_var }}"
-              - choose:
-                  - conditions: "{{ current_button == '1' }}"
-                    sequence: !input button_1_double_press
-                  - conditions: "{{ current_button == '2' }}"
-                    sequence: !input button_2_double_press
-                  - conditions: "{{ current_button == '3' }}"
-                    sequence: !input button_3_double_press
-                  - conditions: "{{ current_button == '4' }}"
-                    sequence: !input button_4_double_press
+      - conditions:
+          - condition: template
+            value_template: "{{ key == 't2' and effective_step | int == 2 }}"
+        sequence:
+          - choose: []
+            default: !input t2_action3
 
-          # --- SINGLE TAP ---
-          - conditions:
-              - condition: template
-                value_template: "{{ states(counter_var) | int(0) == 1 }}"
-            sequence:
-              - service: counter.reset
-                target:
-                  entity_id: "{{ counter_var }}"
-              - choose:
-                  - conditions: "{{ current_button == '1' }}"
-                    sequence: !input button_1_single_press
-                  - conditions: "{{ current_button == '2' }}"
-                    sequence: !input button_2_single_press
-                  - conditions: "{{ current_button == '3' }}"
-                    sequence: !input button_3_single_press
-                  - conditions: "{{ current_button == '4' }}"
-                    sequence: !input button_4_single_press
+      #
+      # Taste 3
+      #
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't3' and effective_step | int == 0 }}
+        sequence:
+          - choose: []
+            default: !input t3_action1
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't3' and effective_step | int == 1 }}
+        sequence:
+          - choose: []
+            default: !input t3_action2
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't3' and effective_step | int == 2 }}
+        sequence:
+          - choose: []
+            default: !input t3_action3
+
+      #
+      # Taste 4
+      #
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't4' and effective_step | int == 0 }}
+        sequence:
+          - choose: []
+            default: !input t4_action1
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't4' and effective_step | int == 1 }}
+        sequence:
+          - choose: []
+            default: !input t4_action2
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ key == 't4' and effective_step | int == 2 }}
+        sequence:
+          - choose: []
+            default: !input t4_action3
+
+  - service: input_text.set_value
+    target:
+      entity_id: !input state_helper
+    data:
+      value: >
+        {% set d = data %}
+        {% set d = dict(d) %}
+        {% set d = d | combine({
+          key: {
+            's': effective_step | int + 1,
+            'ts': now_ts | int
+          }
+        }) %}
+        {{ d | to_json }}
