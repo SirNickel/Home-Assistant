@@ -1,5 +1,5 @@
 blueprint:
-  name: Philips Hue Tap - Multi Action Cycle
+  name: ZHA - Philips Hue Tap - Multi Action Cycle
   author: Nicolas Kammerer
   description: "Pro Taste bis zu 3 Aktionen.\n
     Zustand wird in einem Input Text gespeichert.\n
