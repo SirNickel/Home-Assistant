@@ -4,7 +4,7 @@ blueprint:
   description: "Pro Taste bis zu 3 Aktionen.
     Zustand wird in einem Input Text gespeichert.
     Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.12"
+    Version 1.0.10"
   domain: automation
 
   input:
@@ -180,14 +180,14 @@ variables:
 
   # Wenn das Timeout abgelaufen ist ODER die nächste geplante Aktion laut unserer Map "false" (leer) ist, springe zu 0
   effective_step: >
-    {% if (now_ts - data[key]['ts'] | int(0) > timeout_seconds) %}
+    {% if (now_ts - data[key]['ts'] | int(0) > timeout_seconds) or current_step == 3 %}
       0
     {% else %}
       {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-      {% if next_act_key in act_exists and act_exists[next_act_key] == true %}
-        {{ current_step }}
-      {% else %}
+      {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
         0
+      {% else %}
+        {{ current_step }}
       {% endif %}
     {% endif %}
 
