@@ -4,7 +4,7 @@ blueprint:
     Pro Taste bis zu 3 Aktionen.
     Zustand wird in einem Input Text gespeichert.
     Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.1
+    Version 1.0.5
 
   domain: automation
 
@@ -117,18 +117,6 @@ variables:
   #   {% else %}
   #     {{ current_step }}
   #   {% endif %}
-  # Ermittelt den auszuführenden Schritt unter Berücksichtigung von Timeout und leeren Folge-Aktionen
-  effective_step: >
-    {% if (now_ts - last_ts > timeout_seconds) %}
-      0
-    {% else %}
-      {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-      {% if act_map[next_act_key] == none %}
-        0
-      {% else %}
-        {{ current_step }}
-      {% endif %}
-    {% endif %}
 
   # Verzeichnis aller Inputs zur Validierung (ob gesetzt oder nicht)
   act_map:
@@ -144,6 +132,19 @@ variables:
     t4_a1: !input t4_action1
     t4_a2: !input t4_action2
     t4_a3: !input t4_action3
+
+  # Ermittelt den auszuführenden Schritt unter Berücksichtigung von Timeout und leeren Folge-Aktionen
+  effective_step: >
+    {% if (now_ts - last_ts > timeout_seconds) %}
+      0
+    {% else %}
+      {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
+      {% if act_map[next_act_key] is defined and act_map[next_act_key] | length > 0 %}
+        0
+      {% else %}
+        {{ current_step }}
+      {% endif %}
+    {% endif %}
 
 action:
   #
