@@ -4,7 +4,7 @@ blueprint:
   description: "Pro Taste bis zu 3 Aktionen.
     Zustand wird in einem Input Text gespeichert.
     Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.11"
+    Version 1.0.12"
   domain: automation
 
   input:
@@ -184,7 +184,7 @@ variables:
       0
     {% else %}
       {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-      {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
+      {% if act_exists[next_act_key] is defined and act_exists[next_act_key] == false %}
         0
       {% else %}
         {{ current_step }}
