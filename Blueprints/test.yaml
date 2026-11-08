@@ -179,7 +179,7 @@ action:
           - choose: []
             default: !input t2_action1
           - variables:
-              next_state: "{{ 1 if act_map['t2_a2'] != none else 0 }}"
+              next_state: "{{ 1 if t1_action2 != none else 0 }}"
 
       - conditions:
           - condition: template
