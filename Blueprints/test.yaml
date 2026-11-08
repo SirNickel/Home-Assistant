@@ -1,19 +1,21 @@
 blueprint:
   name: Philips Hue Tap - Multi Action Cycle
+  author: Nicolas Kammerer
   description: "Pro Taste bis zu 3 Aktionen.
     Zustand wird in einem Input Text gespeichert.
     Nach Timeout beginnt die Taste wieder bei Aktion 1.
-    Version 1.0.10"
+    Version 1.0.11"
   domain: automation
 
   input:
     main_section:
       name: Allgemeine Einstellungen
       icon: mdi:gear
+      collapsed: false
       input:
         remote:
           name: Hue Tap Switch
-          description: Select the Philips Hue Tap Switch
+          description: Wähle den Philips Hue Tap Schalter aus.
           selector:
             device:
               integration: zha
@@ -21,9 +23,7 @@ blueprint:
               model: Hue Tap
         state_helper:
           name: State Helper
-          description: Create an input text helper within Home Assistant to keep track
-            of the last button pressed and its automation run. This avoids mixing fast
-            presses from different buttons. **Each switch requires a unique helper!**
+          description: Ein input_text Helfer, um den Zustand zu speichern.
           selector:
             entity:
               domain: input_text
@@ -42,13 +42,17 @@ blueprint:
       collapsed: true
       input:
         t1_action1:
+          name: Aktion 1 (Optional)
+          default: []
           selector:
             action: {}
         t1_action2:
+          name: Aktion 2 (Optional)
           default: []
           selector:
             action: {}
         t1_action3:
+          name: Aktion 3 (Optional)
           default: []
           selector:
             action: {}
@@ -56,15 +60,20 @@ blueprint:
     t2_section:
       name: Taste 2 Aktionen
       icon: mdi:gesture-tap-button
+      collapsed: true
       input:
         t2_action1:
+          name: Aktion 1 (Optional)
+          default: []
           selector:
             action: {}
         t2_action2:
+          name: Aktion 2 (Optional)
           default: []
           selector:
             action: {}
         t2_action3:
+          name: Aktion 3 (Optional)
           default: []
           selector:
             action: {}
@@ -72,15 +81,20 @@ blueprint:
     t3_section:
       name: Taste 3 Aktionen
       icon: mdi:gesture-tap-button
+      collapsed: true
       input:
         t3_action1:
+          name: Aktion 1 (Optional)
+          default: []
           selector:
             action: {}
         t3_action2:
+          name: Aktion 2 (Optional)
           default: []
           selector:
             action: {}
         t3_action3:
+          name: Aktion 3 (Optional)
           default: []
           selector:
             action: {}
@@ -88,15 +102,20 @@ blueprint:
     t4_section:
       name: Taste 4 Aktionen
       icon: mdi:gesture-tap-button
+      collapsed: true
       input:
         t4_action1:
+          name: Aktion 1 (Optional)
+          default: []
           selector:
             action: {}
         t4_action2:
+          name: Aktion 2 (Optional)
           default: []
           selector:
             action: {}
         t4_action3:
+          name: Aktion 3 (Optional)
           default: []
           selector:
             action: {}
@@ -172,15 +191,6 @@ variables:
       {% endif %}
     {% endif %}
 
-  # Nächster Schritt
-  # next_step: >
-  #   {% set next_act_key = key ~ '_a' ~ (current_step + 1) %}
-  #   {% if act_exists[next_act_key] == 'False' or act_exists[next_act_key] == false %}
-  #     0
-  #   {% else %}
-  #     {{ current_step + 1 }}
-  #   {% endif %}
-
 action:
   #
   # Taste 1
@@ -188,33 +198,24 @@ action:
   - choose:
       - conditions:
           - condition: template
-            value_template: >
-              {{ key == 't1' and effective_step | int == 0 }}
+            value_template: "{{ key == 't1' and effective_step | int == 0 }}"
         sequence:
           - choose: []
             default: !input t1_action1
-          - variables:
-              next_state: 1
 
       - conditions:
           - condition: template
-            value_template: >
-              {{ key == 't1' and effective_step | int == 1 }}
+            value_template: "{{ key == 't1' and effective_step | int == 1 }}"
         sequence:
           - choose: []
             default: !input t1_action2
-          - variables:
-              next_state: 2
 
       - conditions:
           - condition: template
-            value_template: >
-              {{ key == 't1' and effective_step | int == 2 }}
+            value_template: "{{ key == 't1' and effective_step | int == 2 }}"
         sequence:
           - choose: []
             default: !input t1_action3
-          - variables:
-              next_state: 0
 
       #
       # TASTE 2
@@ -225,8 +226,6 @@ action:
         sequence:
           - choose: []
             default: !input t2_action1
-          - variables:
-              next_state: 1
 
       - conditions:
           - condition: template
@@ -234,8 +233,6 @@ action:
         sequence:
           - choose: []
             default: !input t2_action2
-          - variables:
-              next_state: 2
 
       - conditions:
           - condition: template
@@ -243,8 +240,6 @@ action:
         sequence:
           - choose: []
             default: !input t2_action3
-          - variables:
-              next_state: 0
 
       #
       # Taste 3
@@ -256,8 +251,6 @@ action:
         sequence:
           - choose: []
             default: !input t3_action1
-          - variables:
-              next_state: 1
 
       - conditions:
           - condition: template
@@ -266,8 +259,6 @@ action:
         sequence:
           - choose: []
             default: !input t3_action2
-          - variables:
-              next_state: 2
 
       - conditions:
           - condition: template
@@ -276,8 +267,6 @@ action:
         sequence:
           - choose: []
             default: !input t3_action3
-          - variables:
-              next_state: 0
 
       #
       # Taste 4
@@ -289,8 +278,6 @@ action:
         sequence:
           - choose: []
             default: !input t4_action1
-          - variables:
-              next_state: 1
 
       - conditions:
           - condition: template
@@ -299,8 +286,6 @@ action:
         sequence:
           - choose: []
             default: !input t4_action2
-          - variables:
-              next_state: 2
 
       - conditions:
           - condition: template
@@ -309,8 +294,6 @@ action:
         sequence:
           - choose: []
             default: !input t4_action3
-          - variables:
-              next_state: 0
 
   - service: input_text.set_value
     target:

@@ -26,8 +26,9 @@ blueprint:
     last_pressed:
       name: Last Pressed Input Text Helper
       description: Create an input text helper within Home Assistant to keep track
-        of the last button pressed and its automation run. This avoids mixing fast
-        presses from different buttons. **Each switch requires a unique helper!**
+        of the last button pressed and its automation run.
+        This avoids mixing fast presses from different buttons.
+        **Each switch requires a unique helper!**
       selector:
         entity:
           domain:
